@@ -34,7 +34,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isForm, setIsForm] = useState(false);
-  const [dataUri, setDataUri] = useState("");
+  const [dataHtml, setDataHtml] = useState("");
 
   useEffect(() => {
     if (!contractAddress && !tokenId) {
@@ -66,10 +66,10 @@ function App() {
         const data = await publicClient.readContract({
           address: generatorAddress,
           abi: GenArt721GeneratorV0Abi,
-          functionName: "getTokenHtmlBase64EncodedDataUri",
+          functionName: "getTokenHtml",
           args: [contractAddress as Hex, BigInt(tokenId)],
         });
-        setDataUri(data);
+        setDataHtml(data);
         setLoading(false);
       } catch (error) {
         console.error(error);
@@ -95,7 +95,7 @@ function App() {
 
   return (
     <>
-      <iframe src={dataUri} />
+      <iframe srcDoc={dataHtml} />
     </>
   );
 }
