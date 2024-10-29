@@ -41,7 +41,8 @@ export const InputForm = ({
         onSubmit={(values, { setSubmitting }) => {
           window.open(
             window.location.origin +
-              `/${values.contractAddress}/${values.tokenId}`,
+              import.meta.env.BASE_URL +
+              `${values.contractAddress}/${values.tokenId}`,
             "_blank"
           );
           setSubmitting(false);

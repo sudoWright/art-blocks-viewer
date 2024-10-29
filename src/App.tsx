@@ -30,7 +30,7 @@ const coreDeploymentOptions = coreDeployments[network.id];
 function App() {
   const [contractAddress, tokenId] = window.location.pathname
     .split("/")
-    .slice(1);
+    .slice(2);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isForm, setIsForm] = useState(false);
