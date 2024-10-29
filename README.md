@@ -1,4 +1,4 @@
-# Art Blocks On-Chain Generator Demo
+# Art Blocks On-Chain Generator Viewer
 
 This repository contains a viewer application for the Art Blocks On-Chain Generator.
 
