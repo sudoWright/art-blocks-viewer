@@ -36,8 +36,11 @@ function App() {
   // case when running a server
   let [contractAddress, tokenId] = window.location.pathname.split("/").slice(2);
   // case when running on github pages w/404.html re-routing
-  if (!contractAddress && !tokenId) {
+  const path_debug = getRedirectPathParam();
+  console.log("split debugging", path_debug?.split("/"));
+  if (!contractAddress || !tokenId) {
     const path_ = getRedirectPathParam();
+    console.log("parsing github pages re-route", path_?.split("/"));
     if (path_) {
       [contractAddress, tokenId] = path_.split("/");
     }
