@@ -2,6 +2,12 @@
 
 This repository contains a viewer application for the Art Blocks On-Chain Generator.
 
+## [https://artblocks.github.io/on-chain-generator-viewer](https://artblocks.github.io/on-chain-generator-viewer)
+
+> You may also run the application locally by following the instructions below
+
+## Overview
+
 The Art Blocks On-Chain Generator is a unique smart contract that assembles various on-chain resources, including project scripts, dependency scripts, and token data into a cohesive template. All of these components are stored on-chain. The generator leverages Scripty.sol to efficiently orchestrate the integration of these resources, producing the executable code needed to render an Art Blocks NFT in a web browser.
 
 This viewer application retrieves the data URI of the NFT from a single contract call and injects it as the source of an iframe to display the token.
