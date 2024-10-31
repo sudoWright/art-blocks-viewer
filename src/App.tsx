@@ -27,10 +27,21 @@ const publicClient = createPublicClient({
 const generatorAddress = generatorDeployments[network.id];
 const coreDeploymentOptions = coreDeployments[network.id];
 
+function getRedirectPathParam() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get("p");
+}
+
 function App() {
-  const [contractAddress, tokenId] = window.location.pathname
-    .split("/")
-    .slice(2);
+  // case when running a server
+  let [contractAddress, tokenId] = window.location.pathname.split("/").slice(2);
+  // case when running on github pages w/404.html re-routing
+  if (!contractAddress && !tokenId) {
+    const path_ = getRedirectPathParam();
+    if (path_) {
+      [contractAddress, tokenId] = path_.split("/");
+    }
+  }
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isForm, setIsForm] = useState(false);
