@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import path from "path";
 import react from "@vitejs/plugin-react";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -15,5 +16,10 @@ export default defineConfig({
       ],
     }),
   ],
-  base: "/on-chain-generator-viewer/",
+  base: "/on-chain-generator-viewer",
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
 });

@@ -1,6 +1,10 @@
+import { Hex } from "viem";
+
 export type CoreDeployment = {
   label: string;
-  value: string;
+  address: Hex;
+  version: 0 | 1 | 3;
+  startingProjectId: number;
 };
 
 export const coreDeployments: {
@@ -9,25 +13,35 @@ export const coreDeployments: {
   "1": [
     {
       label: "Art Blocks Flagship: V0",
-      value: "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a",
+      address: "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a",
+      version: 0,
+      startingProjectId: 0,
     },
     {
       label: "Art Blocks Flagship: V1",
-      value: "0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270",
+      address: "0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270",
+      version: 1,
+      startingProjectId: 3,
     },
     {
       label: "Art Blocks Flagship: V3",
-      value: "0x99a9B7c1116f9ceEB1652de04d5969CcE509B069",
+      address: "0x99a9B7c1116f9ceEB1652de04d5969CcE509B069",
+      version: 3,
+      startingProjectId: 374,
     },
     {
       label: "Art Blocks Curated: V3.2",
-      value: "0xAB0000000000aa06f89B268D604a9c1C41524Ac6",
+      address: "0xAB0000000000aa06f89B268D604a9c1C41524Ac6",
+      version: 3,
+      startingProjectId: 495,
     },
   ],
   "11155111": [
     {
       label: "Sepolia Example",
-      value: "0xEC5DaE4b11213290B2dBe5295093f75920bD2982",
+      address: "0xEC5DaE4b11213290B2dBe5295093f75920bD2982",
+      version: 3,
+      startingProjectId: 0,
     },
   ],
 };

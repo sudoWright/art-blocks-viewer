@@ -1,112 +1,123 @@
-import { useEffect, useState } from "react";
-import { Hex, createPublicClient, http, isAddress } from "viem";
-import { mainnet, sepolia } from "viem/chains";
+import { publicClient } from "@/utils/env";
+import { useEffect, useRef, useState } from "react";
+import { Hex } from "viem";
 import { GenArt721GeneratorV0Abi } from "./abis/GenArt721GeneratorV0Abi";
-import { generatorDeployments } from "./deployments/generator";
-import { coreDeployments } from "./deployments/cores";
-import { InputForm } from "./components/inputForm";
-import "./App.css";
-
-const networkNameToChainMap = {
-  mainnet: mainnet,
-  sepolia: sepolia,
-};
-
-// @dev default to mainnet if network env var not populated
-const network =
-  networkNameToChainMap[
-    (import.meta.env.VITE_NETWORK || "mainnet") as "mainnet" | "sepolia"
-  ];
-
-// @dev default to public viem http endpoint if rpc env var not populated
-const publicClient = createPublicClient({
-  chain: network,
-  transport: http(import.meta.env.VITE_JSON_RPC_PROVIDER_URL),
-});
-
-const generatorAddress = generatorDeployments[network.id];
-const coreDeploymentOptions = coreDeployments[network.id];
-
-function getRedirectPathParam() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("p");
-}
+import { TokenForm } from "./components/TokenForm";
+import { generatorAddress } from "@/utils/env";
+import { useSearchParams } from "./hooks/useSearchParams";
+import { Loader2 } from "lucide-react";
+import { cn } from "./lib/utils";
 
 function App() {
-  // case when running a server
-  let [contractAddress, tokenId] = window.location.pathname.split("/").slice(2);
-  // case when running on github pages w/404.html re-routing
-  if (!contractAddress && !tokenId) {
-    const path_ = getRedirectPathParam();
-    if (path_) {
-      [, contractAddress, tokenId] = path_.split("/");
-    }
-  }
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const {
+    params: { contractAddress, projectId, tokenInvocation },
+  } = useSearchParams();
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isForm, setIsForm] = useState(false);
   const [dataHtml, setDataHtml] = useState("");
 
   useEffect(() => {
-    if (!contractAddress && !tokenId) {
-      setIsForm(true);
-      return;
-    } else {
-      setIsForm(false);
-    }
-    if (!contractAddress || !tokenId) {
-      setError(
-        "Invalid URL, please make sure the URL is in the format /<contract address>/<token id>"
-      );
-      return;
-    }
-
-    if (!isAddress(contractAddress)) {
-      setError("Invalid contract address");
-      return;
-    }
-
-    if (isNaN(Number(tokenId))) {
-      setError("Invalid token id");
-      return;
-    }
+    const controller = new AbortController();
 
     async function fetchTokenData() {
-      console.log({ generatorAddress, contractAddress });
+      if (!contractAddress || !projectId || !tokenInvocation) {
+        return;
+      }
+
+      const tokenId = Number(projectId) * 1_000_000 + Number(tokenInvocation);
+
       try {
+        // Check if already aborted
+        if (controller.signal.aborted) return;
+
+        setLoading(true);
         const data = await publicClient.readContract({
           address: generatorAddress,
           abi: GenArt721GeneratorV0Abi,
           functionName: "getTokenHtml",
           args: [contractAddress as Hex, BigInt(tokenId)],
         });
-        setDataHtml(data);
-        setLoading(false);
+
+        // Check if aborted before setting state
+        if (!controller.signal.aborted) {
+          setDataHtml(data);
+          setError(null);
+          setLoading(false);
+        }
       } catch (error) {
-        console.error(error);
-        setError(
-          "Error fetching token data, please make sure you've provided a valid contract address and token id combination"
-        );
+        // Only set error if not aborted
+        if (!controller.signal.aborted) {
+          console.log("error", error);
+          console.error(error);
+          setError(
+            "Error fetching token data, please make sure you've provided a valid contract address and token id combination"
+          );
+          setLoading(false);
+        }
       }
     }
+
     fetchTokenData();
-  }, [contractAddress, tokenId]);
 
-  if (isForm) {
-    return <InputForm coreDeploymentOptions={coreDeploymentOptions} />;
-  }
-
-  if (error) {
-    return <div className="center">{error}</div>;
-  }
-
-  if (loading) {
-    return <div className="center">Loading...</div>;
-  }
+    // Cleanup function that aborts any in-flight request
+    return () => {
+      controller.abort();
+    };
+  }, [contractAddress, tokenInvocation, projectId]);
 
   return (
     <>
-      <iframe srcDoc={dataHtml} />
+      <div className="absolute inset-0">
+        <div className="absolute z-20 top-10 left-10 w-[350px]">
+          <TokenForm
+            onFullscreen={() => {
+              iframeRef.current?.requestFullscreen();
+            }}
+          />
+        </div>
+        <div
+          className={cn(
+            "absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-50 pointer-events-none opacity-0 transition-opacity duration-300",
+            {
+              "opacity-100": loading || error,
+            }
+          )}
+        >
+          {(() => {
+            if (loading) {
+              return <Loader2 className="animate-spin" />;
+            }
+
+            if (error) {
+              return <div className="text-red-500">{error}</div>;
+            }
+
+            return null;
+          })()}
+        </div>
+        <iframe
+          srcDoc={dataHtml}
+          className="absolute top-0 left-0 w-full h-full"
+          ref={iframeRef}
+          onLoad={() => {
+            const currentRef = iframeRef.current;
+            if (!currentRef || !currentRef.contentWindow) return;
+
+            const existingOnMouseMove = currentRef.contentWindow.onmousemove;
+            currentRef.contentWindow.onmousemove = function (e) {
+              if (!currentRef.contentWindow) return;
+
+              if (existingOnMouseMove) {
+                existingOnMouseMove.call(currentRef.contentWindow, e);
+              }
+              window.dispatchEvent(new MouseEvent("mousemove", e));
+            };
+          }}
+        />
+      </div>
     </>
   );
 }
