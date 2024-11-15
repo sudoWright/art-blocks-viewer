@@ -71,7 +71,7 @@ function App() {
   return (
     <>
       <div className="absolute inset-0">
-        <div className="absolute z-20 top-10 left-10 w-[350px]">
+        <div className="absolute z-20 sm:top-10 sm:left-10 sm:w-[350px] sm:bottom-auto bottom-4 left-4 right-4">
           <TokenForm
             onFullscreen={() => {
               iframeRef.current?.requestFullscreen();
