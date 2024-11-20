@@ -5,8 +5,9 @@ import { GenArt721GeneratorV0Abi } from "./abis/GenArt721GeneratorV0Abi";
 import { TokenForm } from "./components/TokenForm";
 import { generatorAddress } from "@/utils/env";
 import { useSearchParams } from "./hooks/useSearchParams";
-import { Loader2 } from "lucide-react";
+import { Loader2, Maximize } from "lucide-react";
 import { cn } from "./lib/utils";
+import { useIdle } from "./hooks/useIdle";
 
 function App() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -14,6 +15,8 @@ function App() {
   const {
     params: { contractAddress, projectId, tokenInvocation },
   } = useSearchParams();
+
+  const isIdle = useIdle();
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,11 +75,7 @@ function App() {
     <>
       <div className="absolute inset-0">
         <div className="absolute z-20 sm:top-10 sm:left-10 sm:w-[350px] sm:bottom-auto bottom-4 left-4 right-4">
-          <TokenForm
-            onFullscreen={() => {
-              iframeRef.current?.requestFullscreen();
-            }}
-          />
+          <TokenForm />
         </div>
         <div
           className={cn(
@@ -117,6 +116,19 @@ function App() {
             };
           }}
         />
+        <button
+          className={cn(
+            "absolute p-4 rounded-full bottom-4 right-4 sm:bottom-10 sm:right-10 bg-black bg-opacity-50 hover:bg-opacity-80 transition-all duration-500",
+            {
+              "opacity-0 pointer-events-none": isIdle,
+            }
+          )}
+          onClick={() => {
+            iframeRef.current?.requestFullscreen();
+          }}
+        >
+          <Maximize className="w-5 h-5 stroke-1 stroke-white" />
+        </button>
       </div>
     </>
   );

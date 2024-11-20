@@ -2,8 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Founders Grotesk";
+  src: local("Founders Grotesk Regular"), local("FoundersGrotesk-Regular"),
+    url("./assets/fonts/FoundersGrotesk-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Founders Grotesk";
+  src: local("Founders Grotesk Medium"), local("FoundersGrotesk-Medium"),
+    url("./assets/fonts/FoundersGrotesk-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Founders Grotesk", Inter, system-ui, Avenir, Helvetica, Arial,
+    sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
