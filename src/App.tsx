@@ -74,9 +74,7 @@ function App() {
   return (
     <>
       <div className="absolute inset-0">
-        <div className="absolute z-20 sm:top-10 sm:left-10 sm:w-[350px] sm:bottom-auto bottom-4 left-4 right-4">
-          <TokenForm />
-        </div>
+        <TokenForm />
         <div
           className={cn(
             "absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-50 pointer-events-none opacity-0 transition-opacity duration-300",
@@ -118,7 +116,7 @@ function App() {
         />
         <button
           className={cn(
-            "absolute p-4 rounded-full bottom-4 right-4 sm:bottom-10 sm:right-10 bg-black bg-opacity-50 hover:bg-opacity-80 transition-all duration-500",
+            "z-10 absolute p-4 rounded-full bottom-4 right-4 sm:bottom-10 sm:right-10 bg-black bg-opacity-50 hover:bg-opacity-80 transition-all duration-500",
             {
               "opacity-0 pointer-events-none": isIdle,
             }

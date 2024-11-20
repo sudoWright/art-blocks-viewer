@@ -155,7 +155,7 @@ export function TokenForm() {
         <DrawerTrigger
           asChild
           className={cn(
-            "p-4 bg-black bg-opacity-50 rounded-full transition-all duration-500 hover:bg-opacity-80",
+            "absolute z-20 bottom-4 left-4 sm:top-10 sm:left-10 p-4 bg-black bg-opacity-50 rounded-full transition-all duration-500 hover:bg-opacity-80",
             {
               "opacity-0": isIdle,
             }
