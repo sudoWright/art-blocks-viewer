@@ -112,7 +112,7 @@ export function TokenForm() {
             <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted sm:hidden" />
             <DrawerHeader>
               <div className="flex justify-between">
-                <DrawerTitle>
+                <DrawerTitle className="flex justify-center flex-1 sm:justify-start">
                   <ArtBlocksLockup
                     height={24}
                     className="fill-black w-[132px]"
