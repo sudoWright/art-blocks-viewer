@@ -3,15 +3,18 @@ import { cn } from "@/lib/utils";
 import { networkCoreDeployments } from "@/utils/env";
 import {
   ArrowUpRight,
+  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  EditIcon,
   PanelBottomOpen,
   PanelLeftClose,
   PanelLeftOpen,
+  RotateCcwIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { ArtBlocksLockup } from "../ArtBlocksLockup";
-import { GitHubIcon } from "../GitHubIcon";
+import { useEffect, useId, useState } from "react";
+import { ArtBlocksLockup } from "./ArtBlocksLockup";
+import { GitHubIcon } from "./GitHubIcon";
 import {
   Drawer,
   DrawerClose,
@@ -21,16 +24,18 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "../ui/drawer";
-import { Input } from "../ui/input";
+} from "./ui/drawer";
+import { Input } from "./ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { useTokenFormStore } from "./store";
+} from "./ui/select";
+import { useTokenFormStore } from "../stores/tokenFormStore";
+import { usePublicClientStore } from "@/stores/publicClientStore";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export function TokenForm() {
   // Get and initialize the token form state
@@ -94,6 +99,7 @@ export function TokenForm() {
           <button>
             <PanelLeftOpen className="hidden w-5 h-5 stroke-1 stroke-white sm:block" />
             <PanelBottomOpen className="w-5 h-5 stroke-1 stroke-white sm:hidden" />
+            <VisuallyHidden>Open Token Selection Form</VisuallyHidden>
           </button>
         </DrawerTrigger>
         <DrawerContent
@@ -115,6 +121,7 @@ export function TokenForm() {
                 <DrawerClose asChild className="hidden sm:block">
                   <button className="transition-opacity duration-300 opacity-50 hover:opacity-100">
                     <PanelLeftClose className="w-6 h-6 stroke-1 stroke-muted-foreground" />
+                    <VisuallyHidden>Close Token Selection Form</VisuallyHidden>
                   </button>
                 </DrawerClose>
               </div>
@@ -131,7 +138,7 @@ export function TokenForm() {
                   className="p-4"
                 />
               </div>
-              <InputWithLabel
+              <BoundNumericInput
                 label="Project"
                 value={projectId?.toString() ?? ""}
                 onValueChange={(value) => {
@@ -157,7 +164,7 @@ export function TokenForm() {
                 max={projectRange?.[1]}
                 loading={isLoading.projectRange}
               />
-              <InputWithLabel
+              <BoundNumericInput
                 label="Token"
                 value={tokenInvocation?.toString() ?? ""}
                 onValueChange={(value) => {
@@ -184,6 +191,7 @@ export function TokenForm() {
                 loading={isLoading.invocations}
               />
             </div>
+            <JsonRpcUrlForm className="px-4" />
             <DrawerFooter>
               <div className="flex items-center justify-between gap-2">
                 <a
@@ -249,7 +257,67 @@ export function ContractSelect({
   );
 }
 
-export function InputWithLabel({
+export function JsonRpcUrlForm({ className }: { className?: string }) {
+  const [editing, setEditing] = useState(false);
+  const { jsonRpcUrl, setJsonRpcUrl, resetJsonRpcUrl } = usePublicClientStore();
+  const [pendingJsonRpcUrl, setPendingJsonRpcUrl] = useState(jsonRpcUrl);
+  const isDefaultJsonRpcUrl =
+    jsonRpcUrl === import.meta.env.VITE_JSON_RPC_PROVIDER_URL;
+
+  useEffect(() => {
+    setPendingJsonRpcUrl(jsonRpcUrl);
+  }, [jsonRpcUrl]);
+
+  return (
+    <form
+      className={className}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (editing) {
+          setJsonRpcUrl(pendingJsonRpcUrl);
+        }
+        setEditing(!editing);
+      }}
+    >
+      <label className="block mb-2 text-muted-foreground">
+        Ethereum RPC Endpoint
+      </label>
+      <div className="flex items-center gap-4">
+        <Input
+          value={pendingJsonRpcUrl}
+          onChange={(e) => setPendingJsonRpcUrl(e.target.value)}
+          disabled={!editing}
+        />
+        <button type="submit">
+          {editing ? (
+            <>
+              <CheckIcon className="w-4 h-4 stroke-1" />
+              <VisuallyHidden>Set RPC Endpoint</VisuallyHidden>
+            </>
+          ) : (
+            <>
+              <EditIcon className="w-4 h-4 stroke-1" />
+              <VisuallyHidden>Edit RPC Endpoint</VisuallyHidden>
+            </>
+          )}
+        </button>
+        {!editing && !isDefaultJsonRpcUrl ? (
+          <button
+            onClick={() => {
+              resetJsonRpcUrl();
+            }}
+            type="button"
+          >
+            <RotateCcwIcon className="w-4 h-4 stroke-1" />
+            <VisuallyHidden>Reset RPC Endpoint</VisuallyHidden>
+          </button>
+        ) : null}
+      </div>
+    </form>
+  );
+}
+
+export function BoundNumericInput({
   label,
   value,
   onValueChange,
@@ -268,6 +336,8 @@ export function InputWithLabel({
   loading?: boolean;
   className?: string;
 }) {
+  const id = useId();
+
   const isDecrementDisabled =
     min === undefined || isNaN(Number(value)) || Number(value) <= min;
   const isIncrementDisabled =
@@ -275,7 +345,7 @@ export function InputWithLabel({
 
   return (
     <div className={className}>
-      <label className="block mb-2">
+      <label className="block mb-2" htmlFor={id}>
         <span>{label}</span>{" "}
         <span className="text-xs text-muted-foreground">
           (min: {min}, max: {max})
@@ -301,6 +371,7 @@ export function InputWithLabel({
           />
         </button>
         <Input
+          id={id}
           className="flex-1 text-center"
           value={value}
           onChange={(e) => onValueChange(e.target.value)}

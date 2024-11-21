@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { getProjectRange, getProjectInvocations } from "@/utils/project";
-import { networkCoreDeployments, publicClient } from "@/utils/env";
+import { networkCoreDeployments } from "@/utils/env";
+import { usePublicClientStore } from "./publicClientStore";
 
 // Helper functions for URL manipulation
 const getInitialStateFromURL = () => {
@@ -43,7 +44,6 @@ interface TokenState {
     projectRange: boolean;
     invocations: boolean;
   };
-
   // Actions
   setContractAddress: (address: string) => Promise<void>;
   setProjectId: (id: number) => Promise<void>;
@@ -68,6 +68,7 @@ export const useTokenFormStore = create<TokenState>((set, get) => ({
 
   // Actions
   setContractAddress: async (address: string) => {
+    const { publicClient } = usePublicClientStore.getState();
     set({ contractAddress: address });
     updateURLParams({ contractAddress: address });
 
@@ -97,6 +98,7 @@ export const useTokenFormStore = create<TokenState>((set, get) => ({
   },
 
   setProjectId: async (id: number) => {
+    const { publicClient } = usePublicClientStore.getState();
     set({ projectId: id });
     updateURLParams({ projectId: id.toString() });
 
@@ -134,6 +136,7 @@ export const useTokenFormStore = create<TokenState>((set, get) => ({
   },
 
   initialize: async () => {
+    const { publicClient } = usePublicClientStore.getState();
     const { contractAddress } = get();
 
     // If we have a contract address from URL, load its data
@@ -162,6 +165,7 @@ export const useTokenFormStore = create<TokenState>((set, get) => ({
           set({
             invocations: Number(invocations),
             isLoading: { ...get().isLoading, invocations: false },
+            tokenInvocation: get().tokenInvocation ?? 0,
           });
         }
       }

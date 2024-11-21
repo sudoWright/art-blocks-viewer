@@ -1,9 +1,13 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+import type { Config } from "tailwindcss";
+const config: Config = {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
     extend: {
+      fontSize: {
+        body: ["1rem", { lineHeight: "1.3", letterSpacing: ".48px" }],
+        detail: ["0.75rem", { lineHeight: "1.3", letterSpacing: ".36px" }],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -55,3 +59,5 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 };
+
+export default config;

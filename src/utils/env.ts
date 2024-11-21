@@ -1,7 +1,6 @@
 import { generatorDeployments } from "@/deployments/generator";
 import { coreDeployments } from "@/deployments/cores";
 import { mainnet, sepolia } from "viem/chains";
-import { createPublicClient, http } from "viem";
 
 export const networkNameToChainMap = {
   mainnet: mainnet,
@@ -16,9 +15,3 @@ export const network =
 
 export const generatorAddress = generatorDeployments[network.id];
 export const networkCoreDeployments = coreDeployments[network.id];
-
-// @dev default to public viem http endpoint if rpc env var not populated
-export const publicClient = createPublicClient({
-  chain: network,
-  transport: http(import.meta.env.VITE_JSON_RPC_PROVIDER_URL),
-});

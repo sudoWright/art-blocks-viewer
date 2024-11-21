@@ -1,15 +1,18 @@
-import { generatorAddress, publicClient } from "@/utils/env";
+import { generatorAddress } from "@/utils/env";
 import { Loader2, Maximize } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Hex } from "viem";
 import { useShallow } from "zustand/react/shallow";
 import { GenArt721GeneratorV0Abi } from "./abis/GenArt721GeneratorV0Abi";
 import { TokenForm } from "./components/TokenForm";
-import { useTokenFormStore } from "./components/TokenForm/store";
+import { useTokenFormStore } from "./stores/tokenFormStore";
 import { useIdle } from "./hooks/useIdle";
 import { cn } from "./lib/utils";
+import { usePublicClientStore } from "./stores/publicClientStore";
 
 function App() {
+  const { publicClient } = usePublicClientStore();
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const { contractAddress, projectId, tokenInvocation } = useTokenFormStore(
@@ -77,7 +80,7 @@ function App() {
     return () => {
       controller.abort();
     };
-  }, [contractAddress, tokenInvocation, projectId]);
+  }, [contractAddress, tokenInvocation, projectId, publicClient]);
 
   return (
     <>
