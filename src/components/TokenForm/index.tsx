@@ -1,8 +1,6 @@
 import { useIdle } from "@/hooks/useIdle";
-import { useSearchParams } from "@/hooks/useSearchParams";
 import { cn } from "@/lib/utils";
-import { networkCoreDeployments, publicClient } from "@/utils/env";
-import { getProjectInvocations, getProjectRange } from "@/utils/project";
+import { networkCoreDeployments } from "@/utils/env";
 import {
   ArrowUpRight,
   ChevronLeftIcon,
@@ -11,9 +9,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { ArtBlocksLockup } from "./ArtBlocksLockup";
-import { GitHubIcon } from "./GitHubIcon";
+import { useEffect, useState } from "react";
+import { ArtBlocksLockup } from "../ArtBlocksLockup";
+import { GitHubIcon } from "../GitHubIcon";
 import {
   Drawer,
   DrawerClose,
@@ -23,36 +21,41 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "./ui/drawer";
-import { Input } from "./ui/input";
+} from "../ui/drawer";
+import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "../ui/select";
+import { useTokenFormStore } from "./store";
 
 export function TokenForm() {
+  // Get and initialize the token form state
   const {
-    params: { contractAddress, projectId, tokenInvocation },
-    setSearchParam,
-  } = useSearchParams();
+    contractAddress,
+    projectId,
+    tokenInvocation,
+    projectRange,
+    invocations,
+    isLoading,
+    setContractAddress,
+    setProjectId,
+    setTokenInvocation,
+    initialize,
+  } = useTokenFormStore();
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
-  const [projectRangeLoading, setProjectRangeLoading] = useState(false);
-  const [projectRange, setProjectRange] = useState<[number, number] | null>(
-    null
-  );
-
-  const [invocationsLoading, setInvocationsLoading] = useState(false);
-  const [invocations, setInvocations] = useState<number | null>(null);
-
-  // Hide the controls when the user is idle
-  const isIdle = useIdle();
-
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(true);
   const [drawerDirection, setDrawerDirection] = useState<"left" | "bottom">(
     "left"
   );
+  // Drawer direction changes based on screen size, left for desktop, bottom for mobile
   useEffect(() => {
     const handleResize = () => {
       setDrawerDirection(window.innerWidth >= 640 ? "left" : "bottom");
@@ -68,94 +71,21 @@ export function TokenForm() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const setContractAddress = useCallback(
-    (address: string) => {
-      setSearchParam("contractAddress", address);
-    },
-    [setSearchParam]
-  );
-
-  const setProjectId = useCallback(
-    (id: number | undefined) => {
-      setSearchParam("projectId", id?.toString());
-    },
-    [setSearchParam]
-  );
-
-  const setTokenInvocation = useCallback(
-    (id: number | undefined) => {
-      setSearchParam("tokenInvocation", id?.toString());
-    },
-    [setSearchParam]
-  );
-
-  const coreDeployment = networkCoreDeployments.find(
-    (deployment) =>
-      deployment.address.toLowerCase() === contractAddress?.toLowerCase()
-  );
-
-  useEffect(() => {
-    setContractAddress(networkCoreDeployments[0].address);
-  }, [setContractAddress]);
-
-  // Get the project range when the contract address changes
-  useEffect(() => {
-    async function getAndAssignProjectRange() {
-      if (!coreDeployment) {
-        return;
-      }
-
-      setProjectRangeLoading(true);
-      const range = await getProjectRange(publicClient, coreDeployment);
-      setProjectRange(range);
-      setProjectId(range[0]);
-      setProjectRangeLoading(false);
-    }
-
-    getAndAssignProjectRange();
-  }, [contractAddress, coreDeployment, setProjectId]);
-
-  // Reset the project range and selected project id when the contract address changes
-  useEffect(() => {
-    setProjectRange(null);
-    setProjectId(undefined);
-  }, [contractAddress, setProjectId]);
-
-  // Get the invocations when the project id changes
-  useEffect(() => {
-    async function getAndAssignInvocations() {
-      if (!coreDeployment || !projectId) {
-        return;
-      }
-
-      setInvocationsLoading(true);
-      const projectInvocations = await getProjectInvocations(
-        publicClient,
-        coreDeployment,
-        Number(projectId)
-      );
-
-      setInvocations(Number(projectInvocations));
-      setTokenInvocation(0);
-      setInvocationsLoading(false);
-    }
-
-    getAndAssignInvocations();
-  }, [projectId, contractAddress, coreDeployment, setTokenInvocation]);
-
-  // Reset the invocations and selected token invocation when the project id changes
-  useEffect(() => {
-    setTokenInvocation(undefined);
-    setInvocations(null);
-  }, [projectId, setTokenInvocation]);
+  // Hide the drawer trigger when the user is idle
+  const isIdle = useIdle();
 
   return (
     <>
-      <Drawer direction={drawerDirection} defaultOpen={true}>
+      <Drawer
+        direction={drawerDirection}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      >
         <DrawerTrigger
           asChild
+          autoFocus={false}
           className={cn(
-            "absolute z-20 bottom-4 left-4 sm:top-10 sm:left-10 p-4 bg-black bg-opacity-50 rounded-full transition-all duration-500 hover:bg-opacity-80",
+            "absolute z-20 bottom-4 left-4 sm:bottom-auto sm:top-10 sm:left-10 p-4 bg-black bg-opacity-50 rounded-full transition-all duration-500 hover:bg-opacity-80",
             {
               "opacity-0": isIdle,
             }
@@ -203,7 +133,7 @@ export function TokenForm() {
               </div>
               <InputWithLabel
                 label="Project"
-                value={projectId ? projectId.toString() : ""}
+                value={projectId?.toString() ?? ""}
                 onValueChange={(value) => {
                   if (isNaN(Number(value))) {
                     return;
@@ -225,11 +155,11 @@ export function TokenForm() {
                 }}
                 min={projectRange?.[0]}
                 max={projectRange?.[1]}
-                loading={projectRangeLoading}
+                loading={isLoading.projectRange}
               />
               <InputWithLabel
                 label="Token"
-                value={tokenInvocation ? tokenInvocation.toString() : ""}
+                value={tokenInvocation?.toString() ?? ""}
                 onValueChange={(value) => {
                   if (isNaN(Number(value))) {
                     return;
@@ -251,7 +181,7 @@ export function TokenForm() {
                 }}
                 min={0}
                 max={invocations ? invocations - 1 : 0}
-                loading={invocationsLoading}
+                loading={isLoading.invocations}
               />
             </div>
             <DrawerFooter>
@@ -288,18 +218,30 @@ export function ContractSelect({
   handleChange: (address: string) => void;
   className?: string;
 }) {
+  const val = value ?? networkCoreDeployments[0].address;
+
   return (
-    <Select
-      value={value ?? networkCoreDeployments[0].address}
-      onValueChange={handleChange}
-    >
+    <Select value={val} onValueChange={handleChange}>
       <SelectTrigger className={className}>
-        <SelectValue placeholder="Select a core contract" />
+        <SelectValue placeholder="Select a core contract" asChild>
+          <span>
+            <span className="mr-2">
+              {networkCoreDeployments.find((d) => d.address === value)?.label ??
+                "Select a core contract"}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              ({val.slice(0, 6)}…{val.slice(-4)})
+            </span>
+          </span>
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {networkCoreDeployments.map((deployment) => (
           <SelectItem key={deployment.address} value={deployment.address}>
-            {deployment.label}
+            <span className="block">{deployment.label}</span>
+            <span className="text-xs text-muted-foreground">
+              {deployment.address}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>

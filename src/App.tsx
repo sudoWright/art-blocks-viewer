@@ -1,20 +1,24 @@
-import { publicClient } from "@/utils/env";
+import { generatorAddress, publicClient } from "@/utils/env";
+import { Loader2, Maximize } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Hex } from "viem";
+import { useShallow } from "zustand/react/shallow";
 import { GenArt721GeneratorV0Abi } from "./abis/GenArt721GeneratorV0Abi";
 import { TokenForm } from "./components/TokenForm";
-import { generatorAddress } from "@/utils/env";
-import { useSearchParams } from "./hooks/useSearchParams";
-import { Loader2, Maximize } from "lucide-react";
-import { cn } from "./lib/utils";
+import { useTokenFormStore } from "./components/TokenForm/store";
 import { useIdle } from "./hooks/useIdle";
+import { cn } from "./lib/utils";
 
 function App() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const {
-    params: { contractAddress, projectId, tokenInvocation },
-  } = useSearchParams();
+  const { contractAddress, projectId, tokenInvocation } = useTokenFormStore(
+    useShallow((state) => ({
+      contractAddress: state.contractAddress,
+      projectId: state.projectId,
+      tokenInvocation: state.tokenInvocation,
+    }))
+  );
 
   const isIdle = useIdle();
 
@@ -26,7 +30,11 @@ function App() {
     const controller = new AbortController();
 
     async function fetchTokenData() {
-      if (!contractAddress || !projectId || !tokenInvocation) {
+      if (
+        contractAddress === undefined ||
+        projectId === undefined ||
+        tokenInvocation === undefined
+      ) {
         return;
       }
 
