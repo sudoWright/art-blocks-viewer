@@ -1,153 +1,324 @@
 export const GenArt721GeneratorV0Abi = [
   {
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "internalType": "address",
-        "name": "_dependencyRegistry",
-        "type": "address"
+        indexed: true,
+        internalType: "address",
+        name: "_dependencyRegistry",
+        type: "address",
+      },
+    ],
+    name: "DependencyRegistryUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_gunzipScriptBytecodeAddress",
+        type: "address",
+      },
+    ],
+    name: "GunzipScriptBytecodeAddressUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint8",
+        name: "version",
+        type: "uint8",
+      },
+    ],
+    name: "Initialized",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_scriptyBuilder",
+        type: "address",
+      },
+    ],
+    name: "ScriptyBuilderUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_universalBytecodeStorageReader",
+        type: "address",
+      },
+    ],
+    name: "UniversalBytecodeStorageReaderUpdated",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "dependencyRegistry",
+    outputs: [
+      {
+        internalType: "contract IDependencyRegistryV0",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "dependencyNameAndVersion",
+        type: "string",
+      },
+    ],
+    name: "getDependencyScript",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "coreContract",
+        type: "address",
       },
       {
-        "internalType": "address",
-        "name": "_scriptyBuilder",
-        "type": "address"
+        internalType: "uint256",
+        name: "projectId",
+        type: "uint256",
+      },
+    ],
+    name: "getOnChainStatus",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "dependencyFullyOnChain",
+        type: "bool",
       },
       {
-        "internalType": "address",
-        "name": "_ethFS",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [],
-    "name": "dependencyRegistry",
-    "outputs": [
-      {
-        "internalType": "contract DependencyRegistryV0",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "ethFS",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "dependencyNameAndVersion",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getDependencyScript",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "coreContractAddress",
-        "type": "address"
+        internalType: "bool",
+        name: "injectsDecentralizedStorageNetworkAssets",
+        type: "bool",
       },
       {
-        "internalType": "uint256",
-        "name": "projectId",
-        "type": "uint256"
-      }
+        internalType: "bool",
+        name: "hasOffChainFlexDepRegDependencies",
+        type: "bool",
+      },
     ],
-    "name": "getProjectScript",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "coreContractAddress",
-        "type": "address"
+        internalType: "address",
+        name: "coreContract",
+        type: "address",
       },
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "projectId",
+        type: "uint256",
+      },
     ],
-    "name": "getTokenHtml",
-    "outputs": [
+    name: "getProjectScript",
+    outputs: [
       {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "coreContractAddress",
-        "type": "address"
+        internalType: "address",
+        name: "coreContract",
+        type: "address",
       },
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
     ],
-    "name": "getTokenHtmlBase64EncodedDataUri",
-    "outputs": [
+    name: "getTokenHtml",
+    outputs: [
       {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "scriptyBuilder",
-    "outputs": [
+    inputs: [
       {
-        "internalType": "contract IScriptyBuilderV2",
-        "name": "",
-        "type": "address"
-      }
+        internalType: "address",
+        name: "coreContract",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const
+    name: "getTokenHtmlBase64EncodedDataUri",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "gunzipScriptBytecodeAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_dependencyRegistry",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_scriptyBuilder",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_gunzipScriptBytecodeAddress",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_universalBytecodeStorageReader",
+        type: "address",
+      },
+    ],
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "scriptyBuilder",
+    outputs: [
+      {
+        internalType: "contract IScriptyBuilderV2",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "universalBytecodeStorageReader",
+    outputs: [
+      {
+        internalType: "contract IUniversalBytecodeStorageReader",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_dependencyRegistry",
+        type: "address",
+      },
+    ],
+    name: "updateDependencyRegistry",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_gunzipScriptBytecodeAddress",
+        type: "address",
+      },
+    ],
+    name: "updateGunzipScriptBytecodeAddress",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_scriptyBuilder",
+        type: "address",
+      },
+    ],
+    name: "updateScriptyBuilder",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_universalBytecodeStorageReader",
+        type: "address",
+      },
+    ],
+    name: "updateUniversalBytecodeStorageReader",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+] as const;

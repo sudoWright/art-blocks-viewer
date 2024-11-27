@@ -1,6 +1,7 @@
 import { generatorDeployments } from "@/deployments/generator";
 import { coreDeployments } from "@/deployments/cores";
 import { mainnet, sepolia } from "viem/chains";
+import { dependencyRegistryDeployments } from "@/deployments/dependencyRegistries";
 
 export const networkNameToChainMap = {
   mainnet: mainnet,
@@ -14,4 +15,6 @@ export const network =
   ];
 
 export const generatorAddress = generatorDeployments[network.id];
+export const dependencyRegistryAddress =
+  dependencyRegistryDeployments[network.id];
 export const networkCoreDeployments = coreDeployments[network.id];

@@ -1,10 +1,10 @@
 import { Hex } from "viem";
 
 export type CoreDeployment = {
-  label: string;
+  label?: string;
   address: Hex;
-  version: 0 | 1 | 3;
-  startingProjectId: number;
+  version?: 0 | 1 | 3;
+  startingProjectId?: number;
 };
 
 export const coreDeployments: {

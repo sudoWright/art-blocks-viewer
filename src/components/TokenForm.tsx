@@ -3,9 +3,11 @@ import { cn } from "@/lib/utils";
 import { networkCoreDeployments } from "@/utils/env";
 import {
   ArrowUpRight,
+  Check,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronsUpDown,
   EditIcon,
   PanelBottomOpen,
   PanelLeftClose,
@@ -26,16 +28,25 @@ import {
   DrawerTrigger,
 } from "./ui/drawer";
 import { Input } from "./ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import { useTokenFormStore } from "../stores/tokenFormStore";
 import { usePublicClientStore } from "@/stores/publicClientStore";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "./ui/command";
+import { Tooltip } from "@radix-ui/react-tooltip";
+import { TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { EthereumIcon } from "./EthereumIcon";
 
 export function TokenForm() {
   // Get and initialize the token form state
@@ -103,7 +114,7 @@ export function TokenForm() {
           </button>
         </DrawerTrigger>
         <DrawerContent
-          className="sm:rounded-lg sm:inset-auto sm:mt-auto sm:left-2 sm:top-2 sm:bottom-2"
+          className="sm:rounded-lg sm:inset-auto sm:mt-auto sm:left-2 sm:top-2 sm:bottom-2 sm:max-w-[400px]"
           style={
             { "--initial-transform": "calc(100% + 8px)" } as React.CSSProperties
           }
@@ -135,7 +146,6 @@ export function TokenForm() {
                 <ContractSelect
                   value={contractAddress}
                   handleChange={setContractAddress}
-                  className="p-4"
                 />
               </div>
               <BoundNumericInput
@@ -145,7 +155,6 @@ export function TokenForm() {
                   if (isNaN(Number(value))) {
                     return;
                   }
-
                   setProjectId(Number(value));
                 }}
                 onBlur={(value) => {
@@ -167,6 +176,7 @@ export function TokenForm() {
               <BoundNumericInput
                 label="Token"
                 value={tokenInvocation?.toString() ?? ""}
+                notice={<OnChainDetails className="ml-1" />}
                 onValueChange={(value) => {
                   if (isNaN(Number(value))) {
                     return;
@@ -203,7 +213,7 @@ export function TokenForm() {
                 </a>
                 <a
                   className="flex items-center gap-1 opacity-50 hover:opacity-100"
-                  href="https://docs.artblocks.io/docs/on-chain-generator-viewer"
+                  href="https://artblocks.io/onchain"
                   target="_blank"
                 >
                   Learn more <ArrowUpRight className="w-4 h-4 stroke-1" />
@@ -226,34 +236,132 @@ export function ContractSelect({
   handleChange: (address: string) => void;
   className?: string;
 }) {
+  const [open, setOpen] = useState(false);
+
+  const supportedContracts = useTokenFormStore(
+    (state) => state.supportedContractDeployments
+  );
+
   const val = value ?? networkCoreDeployments[0].address;
+  const label = supportedContracts.find((d) => d.address === val)?.label;
 
   return (
-    <Select value={val} onValueChange={handleChange}>
-      <SelectTrigger className={className}>
-        <SelectValue placeholder="Select a core contract" asChild>
-          <span>
-            <span className="mr-2">
-              {networkCoreDeployments.find((d) => d.address === value)?.label ??
-                "Select a core contract"}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              ({val.slice(0, 6)}…{val.slice(-4)})
-            </span>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          aria-expanded={open}
+          className={cn(
+            "flex text-body items-center justify-between w-full px-4 py-2 h-10 rounded-[2px] border border-border",
+            className
+          )}
+        >
+          <span className="overflow-hidden text-ellipsis">
+            <span className="mr-2">{label ?? val}</span>
+            {label ? (
+              <span className="text-xs text-muted-foreground">
+                ({val.slice(0, 6)}…{val.slice(-4)})
+              </span>
+            ) : null}
           </span>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {networkCoreDeployments.map((deployment) => (
-          <SelectItem key={deployment.address} value={deployment.address}>
-            <span className="block">{deployment.label}</span>
-            <span className="text-xs text-muted-foreground">
-              {deployment.address}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+          <ChevronsUpDown className="w-4 h-4 ml-2 opacity-50 stroke-1 shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] h-[var(--radix-popover-content-available-height)] sm:h-auto p-0">
+        <Command>
+          <CommandInput placeholder="Search contracts..." />
+          <CommandList>
+            <CommandEmpty>No contract found.</CommandEmpty>
+            <CommandGroup>
+              {supportedContracts.map((deployment) => (
+                <CommandItem
+                  key={deployment.address}
+                  value={deployment.address}
+                  onSelect={(currentValue) => {
+                    handleChange(currentValue);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === deployment.address ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <span className="overflow-hidden">
+                    <span className="block overflow-hidden text-ellipsis">
+                      {deployment.label ?? deployment.address}
+                    </span>
+                    {deployment.label ? (
+                      <span className="text-xs text-muted-foreground">
+                        ({deployment.address})
+                      </span>
+                    ) : null}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function OnChainDetails({ className }: { className?: string }) {
+  const projectOnChainStatus = useTokenFormStore(
+    (state) => state.projectOnChainStatus
+  );
+
+  if (!projectOnChainStatus) {
+    return null;
+  }
+
+  const {
+    dependencyFullyOnChain,
+    injectsDecentralizedStorageNetworkAssets,
+    hasOffChainFlexDepRegDependencies,
+  } = projectOnChainStatus;
+
+  const fullyOnChain =
+    dependencyFullyOnChain &&
+    !injectsDecentralizedStorageNetworkAssets &&
+    !hasOffChainFlexDepRegDependencies;
+
+  let message = "";
+  if (fullyOnChain) {
+    message = "All components of this artwork are stored fully on-chain.";
+  } else {
+    const issues: string[] = [];
+
+    if (!dependencyFullyOnChain || hasOffChainFlexDepRegDependencies) {
+      issues.push("relies on libraries that have not yet been stored on-chain");
+    }
+
+    if (injectsDecentralizedStorageNetworkAssets) {
+      issues.push(
+        "requires assets stored off-chain using decentralized storage"
+      );
+    }
+
+    message = `This artwork ${issues.join(" and ")}.`;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <EthereumIcon
+          className={cn(
+            "w-4 h-4",
+            {
+              "fill-green-500": fullyOnChain,
+              "fill-yellow-500": !fullyOnChain,
+            },
+            className
+          )}
+        />
+      </TooltipTrigger>
+      <TooltipContent>{message}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -320,6 +428,7 @@ export function JsonRpcUrlForm({ className }: { className?: string }) {
 export function BoundNumericInput({
   label,
   value,
+  notice,
   onValueChange,
   onBlur,
   min,
@@ -327,10 +436,11 @@ export function BoundNumericInput({
   loading,
   className,
 }: {
-  label: string;
+  label: React.ReactNode;
   value: string;
   onValueChange: (value: string) => void;
   onBlur?: (value: string) => void;
+  notice?: React.ReactNode;
   min?: number;
   max?: number;
   loading?: boolean;
@@ -345,11 +455,14 @@ export function BoundNumericInput({
 
   return (
     <div className={className}>
-      <label className="block mb-2" htmlFor={id}>
-        <span>{label}</span>{" "}
-        <span className="text-xs text-muted-foreground">
-          (min: {min}, max: {max})
+      <label className="flex mb-2" htmlFor={id}>
+        <span>
+          <span>{label}</span>{" "}
+          <span className="text-xs text-muted-foreground">
+            (min: {min}, max: {max})
+          </span>
         </span>
+        {notice}
       </label>
       <div
         className={cn(

@@ -9,6 +9,7 @@ import { useTokenFormStore } from "./stores/tokenFormStore";
 import { useIdle } from "./hooks/useIdle";
 import { cn } from "./lib/utils";
 import { usePublicClientStore } from "./stores/publicClientStore";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 function App() {
   const { publicClient } = usePublicClientStore();
@@ -83,12 +84,12 @@ function App() {
   }, [contractAddress, tokenInvocation, projectId, publicClient]);
 
   return (
-    <>
+    <TooltipProvider>
       <div className="absolute inset-0">
         <TokenForm />
         <div
           className={cn(
-            "absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-50 pointer-events-none opacity-0 transition-opacity duration-300",
+            "absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-50 pointer-events-none opacity-0 transition-opacity duration-300 p-4 text-center",
             {
               "opacity-100": loading || error,
             }
@@ -139,7 +140,7 @@ function App() {
           <Maximize className="w-5 h-5 stroke-1 stroke-white" />
         </button>
       </div>
-    </>
+    </TooltipProvider>
   );
 }
 
