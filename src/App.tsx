@@ -1,113 +1,146 @@
-import { useEffect, useState } from "react";
-import { Hex, createPublicClient, http, isAddress } from "viem";
-import { mainnet, sepolia } from "viem/chains";
+import { generatorAddress } from "@/utils/env";
+import { Loader2, Maximize } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Hex } from "viem";
+import { useShallow } from "zustand/react/shallow";
 import { GenArt721GeneratorV0Abi } from "./abis/GenArt721GeneratorV0Abi";
-import { generatorDeployments } from "./deployments/generator";
-import { coreDeployments } from "./deployments/cores";
-import { InputForm } from "./components/inputForm";
-import "./App.css";
-
-const networkNameToChainMap = {
-  mainnet: mainnet,
-  sepolia: sepolia,
-};
-
-// @dev default to mainnet if network env var not populated
-const network =
-  networkNameToChainMap[
-    (import.meta.env.VITE_NETWORK || "mainnet") as "mainnet" | "sepolia"
-  ];
-
-// @dev default to public viem http endpoint if rpc env var not populated
-const publicClient = createPublicClient({
-  chain: network,
-  transport: http(import.meta.env.VITE_JSON_RPC_PROVIDER_URL),
-});
-
-const generatorAddress = generatorDeployments[network.id];
-const coreDeploymentOptions = coreDeployments[network.id];
-
-function getRedirectPathParam() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("p");
-}
+import { TokenForm } from "./components/TokenForm";
+import { useTokenFormStore } from "./stores/tokenFormStore";
+import { useIdle } from "./hooks/useIdle";
+import { cn } from "./lib/utils";
+import { usePublicClientStore } from "./stores/publicClientStore";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 function App() {
-  // case when running a server
-  let [contractAddress, tokenId] = window.location.pathname.split("/").slice(2);
-  // case when running on github pages w/404.html re-routing
-  if (!contractAddress && !tokenId) {
-    const path_ = getRedirectPathParam();
-    if (path_) {
-      [, contractAddress, tokenId] = path_.split("/");
-    }
-  }
+  const { publicClient } = usePublicClientStore();
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const { contractAddress, projectId, tokenInvocation } = useTokenFormStore(
+    useShallow((state) => ({
+      contractAddress: state.contractAddress,
+      projectId: state.projectId,
+      tokenInvocation: state.tokenInvocation,
+    }))
+  );
+
+  const isIdle = useIdle();
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isForm, setIsForm] = useState(false);
   const [dataHtml, setDataHtml] = useState("");
 
   useEffect(() => {
-    if (!contractAddress && !tokenId) {
-      setIsForm(true);
-      return;
-    } else {
-      setIsForm(false);
-    }
-    if (!contractAddress || !tokenId) {
-      setError(
-        "Invalid URL, please make sure the URL is in the format /<contract address>/<token id>"
-      );
-      return;
-    }
-
-    if (!isAddress(contractAddress)) {
-      setError("Invalid contract address");
-      return;
-    }
-
-    if (isNaN(Number(tokenId))) {
-      setError("Invalid token id");
-      return;
-    }
+    const controller = new AbortController();
 
     async function fetchTokenData() {
-      console.log({ generatorAddress, contractAddress });
+      if (
+        contractAddress === undefined ||
+        projectId === undefined ||
+        tokenInvocation === undefined
+      ) {
+        return;
+      }
+
+      const tokenId = Number(projectId) * 1_000_000 + Number(tokenInvocation);
+
       try {
+        // Check if already aborted
+        if (controller.signal.aborted) return;
+
+        setLoading(true);
         const data = await publicClient.readContract({
           address: generatorAddress,
           abi: GenArt721GeneratorV0Abi,
           functionName: "getTokenHtml",
           args: [contractAddress as Hex, BigInt(tokenId)],
         });
-        setDataHtml(data);
-        setLoading(false);
+
+        // Check if aborted before setting state
+        if (!controller.signal.aborted) {
+          setDataHtml(data);
+          setError(null);
+          setLoading(false);
+        }
       } catch (error) {
-        console.error(error);
-        setError(
-          "Error fetching token data, please make sure you've provided a valid contract address and token id combination"
-        );
+        // Only set error if not aborted
+        if (!controller.signal.aborted) {
+          console.log("error", error);
+          console.error(error);
+          setError(
+            "Error fetching token data, please make sure you've provided a valid contract address and token id combination"
+          );
+          setLoading(false);
+        }
       }
     }
+
     fetchTokenData();
-  }, [contractAddress, tokenId]);
 
-  if (isForm) {
-    return <InputForm coreDeploymentOptions={coreDeploymentOptions} />;
-  }
-
-  if (error) {
-    return <div className="center">{error}</div>;
-  }
-
-  if (loading) {
-    return <div className="center">Loading...</div>;
-  }
+    // Cleanup function that aborts any in-flight request
+    return () => {
+      controller.abort();
+    };
+  }, [contractAddress, tokenInvocation, projectId, publicClient]);
 
   return (
-    <>
-      <iframe srcDoc={dataHtml} />
-    </>
+    <TooltipProvider>
+      <div className="absolute inset-0">
+        <TokenForm />
+        <div
+          className={cn(
+            "absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-50 pointer-events-none opacity-0 transition-opacity duration-300 p-4 text-center",
+            {
+              "opacity-100": loading || error,
+            }
+          )}
+        >
+          {(() => {
+            if (loading) {
+              return <Loader2 className="animate-spin" />;
+            }
+
+            if (error) {
+              return <div className="text-red-500">{error}</div>;
+            }
+
+            return null;
+          })()}
+        </div>
+        <iframe
+          srcDoc={dataHtml}
+          className="absolute top-0 left-0 w-full h-full"
+          ref={iframeRef}
+          onLoad={() => {
+            const currentRef = iframeRef.current;
+            if (!currentRef || !currentRef.contentWindow) return;
+
+            const existingOnMouseMove = currentRef.contentWindow.onmousemove;
+            currentRef.contentWindow.onmousemove = function (e) {
+              if (!currentRef.contentWindow) return;
+
+              if (existingOnMouseMove) {
+                existingOnMouseMove.call(currentRef.contentWindow, e);
+              }
+              window.dispatchEvent(new MouseEvent("mousemove", e));
+            };
+          }}
+        />
+        <button
+          className={cn(
+            "z-10 absolute p-4 rounded-full bottom-4 right-4 sm:bottom-10 sm:right-10 bg-black bg-opacity-50 hover:bg-opacity-80 transition-all duration-500",
+            {
+              "opacity-0 pointer-events-none": isIdle,
+            }
+          )}
+          onClick={() => {
+            iframeRef.current?.requestFullscreen();
+          }}
+        >
+          <Maximize className="w-5 h-5 stroke-1 stroke-white" />
+        </button>
+      </div>
+    </TooltipProvider>
   );
 }
 
