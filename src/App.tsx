@@ -38,13 +38,13 @@ function App() {
   useEffect(() => {
     if (contractAddress === undefined || projectId === undefined) return;
 
-    const controller = new AbortController();
+    let isActiveRequest = true;
 
     async function fetchProjectData() {
       if (contractAddress === undefined || projectId === undefined) return;
 
       try {
-        if (controller.signal.aborted) return;
+        if (!isActiveRequest) return;
 
         const { projectName, artist } = await getProjectNameAndArtist(
           publicClient,
@@ -52,7 +52,7 @@ function App() {
           BigInt(projectId)
         );
 
-        if (!controller.signal.aborted) {
+        if (isActiveRequest) {
           setProjectData({ projectName, artist });
         }
       } catch (error) {
@@ -64,12 +64,12 @@ function App() {
     fetchProjectData();
 
     return () => {
-      controller.abort();
+      isActiveRequest = false;
     };
   }, [contractAddress, projectId, publicClient]);
 
   useEffect(() => {
-    const controller = new AbortController();
+    let isActiveRequest = true;
 
     async function fetchTokenData() {
       if (
@@ -84,7 +84,7 @@ function App() {
 
       try {
         // Check if already aborted
-        if (controller.signal.aborted) return;
+        if (!isActiveRequest) return;
 
         setLoading(true);
         const data = await publicClient.readContract({
@@ -95,14 +95,14 @@ function App() {
         });
 
         // Check if aborted before setting state
-        if (!controller.signal.aborted) {
+        if (isActiveRequest) {
           setDataHtml(data);
           setError(null);
           setLoading(false);
         }
       } catch (error) {
         // Only set error if not aborted
-        if (!controller.signal.aborted) {
+        if (isActiveRequest) {
           console.log("error", error);
           console.error(error);
           setError(
@@ -117,7 +117,7 @@ function App() {
 
     // Cleanup function that aborts any in-flight request
     return () => {
-      controller.abort();
+      isActiveRequest = false;
     };
   }, [contractAddress, tokenInvocation, projectId, publicClient]);
 
