@@ -168,6 +168,55 @@ export async function getProjectInvocations(
   return BigInt(0);
 }
 
+export async function getProjectNameAndArtist(
+  publicClient: PublicClient,
+  deployment: CoreDeployment | Hex,
+  projectId: bigint
+): Promise<{
+  projectName: string;
+  artist: string;
+}> {
+  const coreAddress =
+    typeof deployment === "string" ? deployment : deployment.address;
+  const projectDetails = await publicClient.readContract({
+    address: coreAddress,
+    // Simplified projectDetails works for all core versions
+    abi: [
+      {
+        inputs: [
+          {
+            internalType: "uint256",
+            name: "_projectId",
+            type: "uint256",
+          },
+        ],
+        name: "projectDetails",
+        outputs: [
+          {
+            internalType: "string",
+            name: "projectName",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "artist",
+            type: "string",
+          },
+        ],
+        stateMutability: "view",
+        type: "function",
+      },
+    ] as const,
+    functionName: "projectDetails",
+    args: [BigInt(projectId)],
+  });
+
+  return {
+    projectName: projectDetails[0],
+    artist: projectDetails[1],
+  };
+}
+
 export const getArt721CoreV0Abi = [
   // Get project invocations via projectTokenInfo
   {

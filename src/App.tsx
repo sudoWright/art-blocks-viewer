@@ -1,15 +1,16 @@
 import { generatorAddress } from "@/utils/env";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Loader2, Maximize } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Hex } from "viem";
 import { useShallow } from "zustand/react/shallow";
 import { GenArt721GeneratorV0Abi } from "./abis/GenArt721GeneratorV0Abi";
 import { TokenForm } from "./components/TokenForm";
-import { useTokenFormStore } from "./stores/tokenFormStore";
 import { useIdle } from "./hooks/useIdle";
 import { cn } from "./lib/utils";
 import { usePublicClientStore } from "./stores/publicClientStore";
-import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { useTokenFormStore } from "./stores/tokenFormStore";
+import { getProjectNameAndArtist } from "./utils/project";
 
 function App() {
   const { publicClient } = usePublicClientStore();
@@ -29,9 +30,46 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dataHtml, setDataHtml] = useState("");
+  const [projectData, setProjectData] = useState<{
+    projectName: string;
+    artist: string;
+  } | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (contractAddress === undefined || projectId === undefined) return;
+
+    let isActiveRequest = true;
+
+    async function fetchProjectData() {
+      if (contractAddress === undefined || projectId === undefined) return;
+
+      try {
+        if (!isActiveRequest) return;
+
+        const { projectName, artist } = await getProjectNameAndArtist(
+          publicClient,
+          contractAddress as Hex,
+          BigInt(projectId)
+        );
+
+        if (isActiveRequest) {
+          setProjectData({ projectName, artist });
+        }
+      } catch (error) {
+        console.error(error);
+        setProjectData(null);
+      }
+    }
+
+    fetchProjectData();
+
+    return () => {
+      isActiveRequest = false;
+    };
+  }, [contractAddress, projectId, publicClient]);
+
+  useEffect(() => {
+    let isActiveRequest = true;
 
     async function fetchTokenData() {
       if (
@@ -46,7 +84,7 @@ function App() {
 
       try {
         // Check if already aborted
-        if (controller.signal.aborted) return;
+        if (!isActiveRequest) return;
 
         setLoading(true);
         const data = await publicClient.readContract({
@@ -57,14 +95,14 @@ function App() {
         });
 
         // Check if aborted before setting state
-        if (!controller.signal.aborted) {
+        if (isActiveRequest) {
           setDataHtml(data);
           setError(null);
           setLoading(false);
         }
       } catch (error) {
         // Only set error if not aborted
-        if (!controller.signal.aborted) {
+        if (isActiveRequest) {
           console.log("error", error);
           console.error(error);
           setError(
@@ -79,7 +117,7 @@ function App() {
 
     // Cleanup function that aborts any in-flight request
     return () => {
-      controller.abort();
+      isActiveRequest = false;
     };
   }, [contractAddress, tokenInvocation, projectId, publicClient]);
 
@@ -139,6 +177,19 @@ function App() {
         >
           <Maximize className="w-5 h-5 stroke-1 stroke-white" />
         </button>
+        {projectData ? (
+          <div
+            className={cn(
+              "z-10 absolute px-4 py-2 rounded-[2px] top-4 right-4 sm:top-10 sm:right-10 bg-black bg-opacity-50 text-white transition-all duration-500 text-right",
+              {
+                "opacity-0 pointer-events-none": isIdle,
+              }
+            )}
+          >
+            <h1 className="font-medium">{projectData?.projectName}</h1>
+            <h2>{projectData?.artist}</h2>
+          </div>
+        ) : null}
       </div>
     </TooltipProvider>
   );
