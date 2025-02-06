@@ -40,7 +40,7 @@ jobs:
         env:
           VITE_JSON_RPC_PROVIDER_URL: ${{ vars.VITE_JSON_RPC_PROVIDER_URL }}
       - name: upload docs artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
